@@ -1,8 +1,8 @@
-use Json.{JsonElement, JsonError}
+use Json.{JsonElement, JsonError, getAtKey}
 use Json.JsonError.JsonError
+use Json.FromJson
 use Json/FromJson.fromJsonAt
 use Json/Path.{Path, !!, apply}
-use Json/Parse.parse
 
 instance ToString[JsonError] {
     pub def toString(x: JsonError): String = match x {
@@ -10,24 +10,48 @@ instance ToString[JsonError] {
     }
 }
 
-def parseApi(): Result[JsonElement, String] \ IO =
-    use Result.flatMap;
-    let* s = File.read("api.json") |> Result.mapErr(s -> "File not found: ${s}");
-    parse(s) |> Option.toOk("Unable to parse api.json")
+enum Api(String, List[String], Map[String, List[Class]]) with ToString
+enum Class(Sym) with ToString
+enum Sym(String) with ToString
 
-def getNamespaces(api: JsonElement): Result[List[String], String] =
+instance FromJson[Api] {
+    pub def fromJsonAt(p: Path, json: JsonElement): Result[Api, JsonError] = 
+        use Result.flatMap;
+        let* obj = fromJsonAt(p, json);
+        let* version = getAtKey(p, "version", obj);
+        let* namespaces = getAtKey(p, "namespaces", obj);
+        let* classes = getAtKey(p, "classes", obj);
+        Ok(Api(version, namespaces, classes))
+}
+
+instance FromJson[Class] {
+    pub def fromJsonAt(p: Path, json: JsonElement): Result[Class, JsonError] = 
+        use Result.flatMap;
+        let* obj = fromJsonAt(p, json);
+        let* sym = getAtKey(p, "sym", obj);
+        Ok(Class(sym))
+}
+
+instance FromJson[Sym] {
+    pub def fromJsonAt(p: Path, json: JsonElement): Result[Sym, JsonError] =
+        use Result.flatMap;
+        let* obj = fromJsonAt(p, json);
+        let* name = getAtKey(p, "name", obj);
+        Ok(Sym(name))
+}
+
+def parse(filename: String): Result[JsonElement, String] \ IO =
     use Result.flatMap;
-    let p = Path.Root !! "namespaces";
-    let* namespaces = api |> apply(p) |> Option.toOk("Unable to find 'namespaces'");
-    namespaces |> fromJsonAt(p) |> Result.mapErr(ToString.toString)
+    let* s = File.read(filename) |> Result.mapErr(s -> "File not found: ${s}");
+    Json/Parse.parse(s) |> Option.toOk("Unable to parse api.json")
 
 def main(): Unit \ IO =
-    let namespaces = {
+    let api: Result[Api, String] = {
         use Result.flatMap;
-        let* api = parseApi();
-        api |> getNamespaces
+        let* json = parse("api.json");
+        fromJsonAt(Path.Root, json) |> Result.mapErr(ToString.toString)
     };
-    match namespaces {
+    match api {
         case Err(e) => println(e)
-        case j => println(j)
+        case Ok(Api(version, namespaces, classes)) => println(version); println(namespaces); println(classes)
     }

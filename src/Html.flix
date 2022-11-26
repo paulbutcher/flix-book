@@ -1,6 +1,6 @@
 namespace Html {
     pub enum Element {
-        case Tag(String, Map[String, String], Chain[Element])
+        case Tag(String, Map[String, String], Option[Nec[Element]])
         case Text(String)
     }
 
@@ -9,10 +9,10 @@ namespace Html {
     }
 
     def fmtElement(e: Element): String = match e {
-        case Tag(name, attrs, Chain.Empty) =>
+        case Tag(name, attrs, None) =>
             "<${name} ${fmtAttrs(attrs)} />"
-        case Tag(name, attrs, children) =>
-            "<${name} ${fmtAttrs(attrs)}> ${children |> Chain.joinWith(fmtElement, " ")} </${name}>"
+        case Tag(name, attrs, Some(children)) =>
+            "<${name} ${fmtAttrs(attrs)}> ${children |> Nec.joinWith(fmtElement, " ")} </${name}>"
         case Text(s) => s
     }
 
@@ -21,9 +21,9 @@ namespace Html {
 
     def fmtAttr(k: String, v: String): String = "${k} = \"${v}\""
 
-    pub def e(x: String): Chain[Element] = Chain.singleton(Tag(x, Map#{}, Chain.empty()))
+    pub def e(x: String): Nec[Element] = Nec.singleton(Tag(x, Map#{}, None))
 
-    pub def t(x: String): Chain[Element] = Chain.singleton(Text(x))
+    pub def t(x: String): Nec[Element] = Nec.singleton(Text(x))
 
     pub def addAttribute(attr: (String, String), e: Element): Element =
         let (k, v) = attr;
@@ -32,20 +32,21 @@ namespace Html {
             case Text(_) => bug!("Can't add attributes to text")
         }
 
-    pub def addChildren(newChildren: Chain[Element], e: Element): Element = match e {
-        case Tag(name, attrs, children) => Tag(name, attrs, children ++ newChildren)
+    pub def addChildren(newChildren: Nec[Element], e: Element): Element = match e {
+        case Tag(name, attrs, None) => Tag(name, attrs, Some(newChildren))
+        case Tag(name, attrs, Some(children)) => Tag(name, attrs, Some(children ++ newChildren))
         case Text(_) => bug!("Can't add children to text")
     }
 
-    pub def +=(es: Chain[Element], attr: (String, String)): Chain[Element] =
-        match Chain.viewRight(es) {
-            case Chain/ViewRight.SomeRight(rest, last) => Chain.snoc(rest, addAttribute(attr, last))
-            case _ => bug!("Can't add attributes to empty chain")
+    pub def +=(es: Nec[Element], attr: (String, String)): Nec[Element] =
+        match Nec.viewRight(es) {
+            case Nec/ViewRight.OneRight(last) => Nec.singleton(addAttribute(attr, last))
+            case Nec/ViewRight.SomeRight(rest, last) => Nec.snoc(rest, addAttribute(attr, last))
         }
 
-    pub def +<(es: Chain[Element], children: Chain[Element]): Chain[Element] = 
-        match Chain.viewRight(es) {
-            case Chain/ViewRight.SomeRight(rest, last) => Chain.snoc(rest, addChildren(children, last))
-            case _ => bug!("Can't add children to empty chain")
+    pub def +<(es: Nec[Element], children: Nec[Element]): Nec[Element] = 
+        match Nec.viewRight(es) {
+            case Nec/ViewRight.OneRight(last) => Nec.singleton(addChildren(children, last))
+            case Nec/ViewRight.SomeRight(rest, last) => Nec.snoc(rest, addChildren(children, last))
         }
 }

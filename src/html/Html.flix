@@ -1,4 +1,5 @@
 namespace Html {
+
     pub enum Element {
         case DocType(String)
         case Tag(String, Map[String, String], Option[Nec[Element]])

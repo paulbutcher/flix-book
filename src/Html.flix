@@ -11,9 +11,9 @@ namespace Html {
     def fmtElement(e: Element): String = match e {
         case DocType(name) => "<!doctype ${name}>"
         case Tag(name, attrs, None) =>
-            "<${name} ${fmtAttrs(attrs)} />"
+            "<${name} ${fmtAttrs(attrs)}/>"
         case Tag(name, attrs, Some(children)) =>
-            "<${name} ${fmtAttrs(attrs)}> ${children |> Nec.joinWith(fmtElement, " ")} </${name}>"
+            "<${name} ${fmtAttrs(attrs)}>${children |> Nec.joinWith(fmtElement, "")}</${name}>"
         case Text(s) => s
     }
 

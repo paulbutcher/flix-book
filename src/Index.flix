@@ -1,7 +1,6 @@
-use Html.Element
-use Html.{doctype, t, e, +=, +<}
+use Html.{doctype, t, e, +=, +<, html}
 
-def index(): Nec[Html.Element] =
+def index(): String =
     doctype("html") ++
     e("html") += ("charset", "utf8") +< (
         e("head") +< (
@@ -21,4 +20,4 @@ def index(): Nec[Html.Element] =
                 ("integrity", "sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4") +=
                 ("crossorigin", "anonymous")
         )
-    )
+    ) |> html

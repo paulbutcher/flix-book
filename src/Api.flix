@@ -9,6 +9,10 @@ namespace Api {
     pub enum Class(Sym) with ToString
     pub enum Sym(String) with ToString
 
+    pub def namespaces(api: Api): List[String] = match api {
+        case Api(_, nss, _) => nss
+    }
+
     pub def mkErrorString(x: JsonError): String = match x {
         case JsonError(p, ss) => "Error at ${p}:\n${Set.join("\n", ss)}"
     }

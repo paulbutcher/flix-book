@@ -1,17 +1,20 @@
-use Api.{parse, Api}
-use Api.Api.Api
+use Api.{Api, parse}
 use HTTP.Request;
 use HTTP/Routes.{defaultRoutes, *>, *$>, *$$>};
 use HTTP/Server.serve
 
-def handler(req: Request): String = 
+def handler(api: Api, req: Request): String =
     req.uri |> HTTP/Routes.handle(
-        ("/" *> index) ::
+        ("/" *> index(api)) ::
         defaultRoutes())
 
+def runServer(): Result[Unit, String] \ IO =
+    use Result.flatMap;
+    let* api = parse("api.json");
+    Ok(serve(handler(api)))
+
 def main(): Unit \ IO =
-    match parse("api.json") {
-        case Err(e) => println(e)
-        case Ok(Api(version, namespaces, classes)) => println(version); println(namespaces); println(classes)
-    };
-    serve(handler)
+    match runServer() {
+        case Ok(_) => ()
+        case Err(message) => println(message)
+    }

@@ -1,0 +1,12 @@
+[project]
+name = "flix-book"
+version = "0.1.0"
+flix = "0.34.1"
+description = "Generate documentation from Flix api.json file"
+authors = ["Paul Butcher"]
+license = "Apache-2.0"
+paths = ["src"]
+
+[dependencies]
+mvn."org.eclipse.jetty:jetty-server" = "11.0.12"
+mvn."org.slf4j:slf4j-simple" = "2.0.3"

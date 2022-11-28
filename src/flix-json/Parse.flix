@@ -178,12 +178,12 @@ namespace Json/Parse {
     }
 
     def hexToInt(hex: String): Option[Int32] = {
-        import static java.lang.Integer.parseInt(String, Int32): Int32 & Impure;
+        import static java.lang.Integer.parseInt(String, Int32): Int32 \ {};
         try {
             Some(parseInt(hex, 16))
         } catch {
             case _: ##java.lang.NumberFormatException => None
-        } as \ {}
+        }
     }
 
     def number(in: List[Char]): ParseMonad[JsonElement] = match in {
